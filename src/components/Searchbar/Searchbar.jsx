@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { BsSearch } from 'react-icons/bs';
-import React, { Component } from 'react';
+import React, { useState } from 'react';
 import {
   SearchbarContainer,
   SearchForm,
@@ -9,48 +9,39 @@ import {
   SearchFormInput,
 } from './Searchbar.styled';
 
-export default class SearchBar extends Component {
-  state = {
-    searchName: '',
+export default function SearchBar({ onSubmit }) {
+  const [searchName, setSearchName] = useState('');
+
+  const handleChange = event => {
+    setSearchName(event.currentTarget.value);
   };
 
-  handleChange = event => {
-    this.setState({ searchName: event.currentTarget.value });
-  };
-
-  handleSubmit = event => {
+  const handleSubmit = event => {
     event.preventDefault();
-    const { searchName } = this.state;
 
-    this.props.onSubmit(searchName);
-    this.setState({
-      searchName: '',
-    });
+    onSubmit(searchName);
+    setSearchName('');
   };
 
-  render() {
-    const { searchName } = this.state;
-    return (
-      <SearchbarContainer>
-        <SearchForm onSubmit={this.handleSubmit}>
-          <SearchFormButton type="submit">
-            <BsSearch />
-            <SearchFormButtonLabel>Search</SearchFormButtonLabel>
-          </SearchFormButton>
+  return (
+    <SearchbarContainer>
+      <SearchForm onSubmit={handleSubmit}>
+        <SearchFormButton type="submit">
+          <BsSearch />
+          <SearchFormButtonLabel>Search</SearchFormButtonLabel>
+        </SearchFormButton>
 
-          <SearchFormInput
-            type="text"
-            // name="searchName"
-            autocomplete="off"
-            autoFocus
-            placeholder="Search images and photos"
-            value={searchName}
-            onChange={this.handleChange}
-          />
-        </SearchForm>
-      </SearchbarContainer>
-    );
-  }
+        <SearchFormInput
+          type="text"
+          autocomplete="off"
+          autoFocus
+          placeholder="Search images and photos"
+          value={searchName}
+          onChange={handleChange}
+        />
+      </SearchForm>
+    </SearchbarContainer>
+  );
 }
 
 SearchBar.propTypes = {

@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getImages } from './Api/PixabayApi';
 import SearchBar from './Searchbar/Searchbar';
 import ImageGallery from './ImageGallery/ImageGallery';
@@ -10,29 +10,44 @@ import { Wrapper } from './Searchbar/Searchbar.styled';
 import { ToastContainer, toast, Slide } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-export class App extends Component {
-  state = {
-    images: [],
-    page: 1,
-    status: 'idle',
-    error: null,
-    showModal: false,
-    largeImageUrl: '',
-    query: '',
-    loadMore: null,
+export function App() {
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [status, setStatus] = useState('idle');
+  const [showModal, setShowModal] = useState(false);
+  const [largeImageUrl, setLargeImageUrl] = useState('');
+  const [query, setQuery] = useState('');
+  const [loadMore, setLoadMore] = useState(null);
+
+  const getLargeImgUrl = largeImageURL => {
+    setLargeImageUrl(largeImageURL);
+    toggleModal();
   };
 
-  
-  componentDidUpdate(_, prevState) {
-    const { page, query } = this.state;
+  const toggleModal = () => {
+    setShowModal(prevShowModal => !prevShowModal);
+  };
 
-    if (
-      prevState.page !== this.state.page ||
-      prevState.query !== this.state.query
-    ) {
-      this.setState({ status: 'loading' });
+  const handleChange = value => {
+    setQuery(value);
+    setPage(1);
+    setImages([]);
+    setLoadMore(null);
+  };
 
-      getImages(query, page)
+  const handleLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
+
+  useEffect(() => {
+    if (!query) {
+      return;
+    }
+
+    setStatus('loading');
+    setLoadMore(null);
+
+    getImages(query, page)
       .then(response => {
         const { hits, totalHits } = response;
 
@@ -42,53 +57,26 @@ export class App extends Component {
           });
         }
 
-        this.setState(prevState => ({
-          images: [...prevState.images, ...hits],
-          status: 'idle',
-          loadMore: 12 - hits.length,
-        }));
+        setImages(prevImages => [...prevImages, ...hits]);
+        setStatus('idle');
+        setLoadMore(12 - hits.length);
       })
       .catch(error => {
         console.log(error);
-        this.setState({ status: 'error' });
+        setStatus('error');
       });
-    }
-  }
+  }, [page, query]);
 
-  getLargeImgUrl = largeImageURL => {
-    this.setState({ largeImageUrl: largeImageURL });
-    this.toggleModal();
-  };
-
-  toggleModal = () => {
-    this.setState(state => ({
-      showModal: !state.showModal,
-    }));
-  };
-
-  handleChange = value => {
-    this.setState({ query: value, page: 1, images: [], loadMore: null });
-  };
-
-  handleLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
-
-  render() {
-    const { images, status, showModal, largeImageUrl, loadMore } = this.state;
-    return (
-      <Wrapper>
-        <ToastContainer transition={Slide} />
-        <SearchBar onSubmit={this.handleChange} />
-        {showModal && (
-          <Modal largeImageURL={largeImageUrl} onClose={this.toggleModal} />
-        )}
-        <ImageGallery images={images} onClick={this.getLargeImgUrl} />
-        {status === 'loading' && <Loader />}
-        {loadMore === 0 && <Button onClick={this.handleLoadMore} />}
-      </Wrapper>
-    );
-  }
+  return (
+    <Wrapper>
+      <ToastContainer transition={Slide} />
+      <SearchBar onSubmit={handleChange} />
+      {showModal && (
+        <Modal largeImageURL={largeImageUrl} onClose={toggleModal} />
+      )}
+      <ImageGallery images={images} onClick={getLargeImgUrl} />
+      {status === 'loading' && <Loader />}
+      {loadMore === 0 && <Button onClick={handleLoadMore} />}
+    </Wrapper>
+  );
 }
