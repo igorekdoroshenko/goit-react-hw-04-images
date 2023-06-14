@@ -4,11 +4,7 @@ import { Overlay, ModalWindow } from './Modal.styled';
 
 export default function Modal ({onClose, largeImageURL}) {
   
-  const hendleKeyDown = e => {
-    if (e.code === 'Escape') {
-      onClose();
-    }
-  };
+  
 
   const handleBackDorpClick = e => {
     if (e.currentTarget === e.target) {
@@ -17,12 +13,17 @@ export default function Modal ({onClose, largeImageURL}) {
   };
 
   useEffect(() => {
+    const hendleKeyDown = e => {
+    if (e.code === 'Escape') {
+      onClose();
+    }
+  };
     window.addEventListener('keydown', hendleKeyDown);
 
     return () => {
     window.removeEventListener('keydown', hendleKeyDown);
     }
-  })
+  },[onClose])
 
     
       return (
